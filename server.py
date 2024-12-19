@@ -11,7 +11,7 @@ app = Flask(__name__)
 credentials = {
     'rpi1': {'ip': '172.16.45.212', 'username': 'pi', 'password': 'pi'},
     'rpi2': {'ip': '172.16.46.88', 'username': 'pi', 'password': 'pi'},
-    'odroid': {'ip': '192.168.1.109', 'username': 'odroid', 'password': 'odroid'}
+    'odroid': {'ip': '192.168.1.111', 'username': 'odroid', 'password': 'odroid'}
 }
 
 # Define the list of admin MAC addresses
@@ -123,7 +123,7 @@ def send_file_to_device(file_path, device_choice, mac_address, file_name, creds)
         username = creds['username']
         password = creds['password']
         device_ip = creds['ip']
-        remote_path = '/home/pi/Desktop/' if username == 'pi' else '/home/odroid/Desktop/'
+        remote_path = '/home/pi/Desktop/' if username == 'pi' else '/home/odroid/Desktop/sesn'
         remote_file_path = os.path.join(remote_path, file_name)
 
         # Connect to the device via SSH
@@ -147,7 +147,10 @@ def send_file_to_device(file_path, device_choice, mac_address, file_name, creds)
         elif file_name.endswith('.c') or file_name.endswith('.cpp'):
             executable_name = file_name.rsplit('.', 1)[0]
             compiler = 'gcc' if file_name.endswith('.c') else 'g++'
-            compile_command = f'{compiler} -fopenmp -o {os.path.join(remote_path, executable_name)} {remote_file_path}'
+            compile_command = (
+                f'{compiler} -fopenmp -std=c++11 -o {os.path.join(remote_path, executable_name)} '
+                f'{remote_file_path} -lOpenCL $(pkg-config --cflags --libs opencv4)'
+            )
             stdin, stdout, stderr = ssh.exec_command(compile_command)
             compile_stderr = stderr.read().decode()
 
